@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">KaraokePlus</string>
+    <string name="title_item_detail">Item Detail</string>
+
+    <string name="category_all">All Songs</string>
+    <string name="category_all_desc">This is all songs</string>
+    <string name="category_russian">Russian Songs</string>
+    <string name="category_russian_desc">This is all Russian Songs</string>
+    <string name="category_foreign">Foreign Songs</string>
+    <string name="category_foreign_desc">This is all Foreign Songs</string>
+    <string name="category_rock">Rock Songs</string>
+    <string name="category_rock_desc">This is all Rock Songs</string>
+    <string name="category_pop">Pop Songs</string>
+    <string name="category_pop_desc">This is all Pop Songs</string>
+    <string name="category_shanson">Shanson Songs</string>
+    <string name="category_shanson_desc">This is all Shanson Songs</string>
+</resources>

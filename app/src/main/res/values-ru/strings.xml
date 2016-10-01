@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Караоке Плюс</string>
+    <string name="title_item_detail">Подробности</string>
+
+    <string name="category_all">Все песни</string>
+    <string name="category_all_desc">Все песни</string>
+    <string name="category_russian">Русские песни</string>
+    <string name="category_russian_desc">Все русские песни</string>
+    <string name="category_foreign">Иностранные песни</string>
+    <string name="category_foreign_desc">Все иностранные песни</string>
+    <string name="category_rock">Рок песни</string>
+    <string name="category_rock_desc">Все рок песни</string>
+    <string name="category_pop">Поп песни</string>
+    <string name="category_pop_desc">Все поп песни</string>
+    <string name="category_shanson">Песни шансона</string>
+    <string name="category_shanson_desc">Все песни шансона</string>
+</resources>
