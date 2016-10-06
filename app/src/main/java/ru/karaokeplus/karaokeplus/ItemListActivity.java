@@ -67,12 +67,12 @@ public class ItemListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
-        CategoryContent.addItem( new CategoryContent.CategoryItem("ALL", getString(R.string.category_all), getString(R.string.category_all_desc)));
-        CategoryContent.addItem( new CategoryContent.CategoryItem("RUSS", getString(R.string.category_russian), getString(R.string.category_russian_desc)));
-        CategoryContent.addItem( new CategoryContent.CategoryItem("IMPORT", getString(R.string.category_foreign), getString(R.string.category_foreign_desc)));
-        CategoryContent.addItem( new CategoryContent.CategoryItem("ROCK", getString(R.string.category_rock), getString(R.string.category_rock_desc)));
-        CategoryContent.addItem( new CategoryContent.CategoryItem("POP", getString(R.string.category_pop), getString(R.string.category_pop_desc)));
-        CategoryContent.addItem( new CategoryContent.CategoryItem("SHANSON", getString(R.string.category_shanson), getString(R.string.category_shanson_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem(R.string.category_all, getString(R.string.category_all), getString(R.string.category_all_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem(R.string.category_russian, getString(R.string.category_russian), getString(R.string.category_russian_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem(R.string.category_foreign, getString(R.string.category_foreign), getString(R.string.category_foreign_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem(R.string.category_rock, getString(R.string.category_rock), getString(R.string.category_rock_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem(R.string.category_pop, getString(R.string.category_pop), getString(R.string.category_pop_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem(R.string.category_shanson, getString(R.string.category_shanson), getString(R.string.category_shanson_desc)));
 
         _sdao = new SongsDAO(this);
 
@@ -146,7 +146,7 @@ public class ItemListActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     if (mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putString(ItemDetailFragment.ARG_ITEM_ID, holder.mItem.id);
+                        arguments.putInt(ItemDetailFragment.ARG_ITEM_ID, holder.mItem.id);
                         ItemDetailFragment fragment = new ItemDetailFragment();
                         fragment.setArguments(arguments);
                         getSupportFragmentManager().beginTransaction()

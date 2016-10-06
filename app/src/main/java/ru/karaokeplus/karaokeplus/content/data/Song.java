@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import ru.karaokeplus.karaokeplus.R;
 import ru.karaokeplus.karaokeplus.content.dao.Identify;
 
 
@@ -83,14 +84,14 @@ public class Song implements Identify, Parcelable {
 
         for(String cat : cats) {
             if(cat.contains("русск")) {
-                if(!_categoriesList.contains(CategoryContent.ITEM_MAP.get("RUSS"))) {
-                    _categoriesList.add(CategoryContent.ITEM_MAP.get("RUSS"));
+                if(!_categoriesList.contains(CategoryContent.ITEM_MAP.get(R.string.category_russian))) {
+                    _categoriesList.add(CategoryContent.ITEM_MAP.get(R.string.category_russian));
                 }
 
             }
             if(cat.contains("иностр")) {
-                if (!_categoriesList.contains(CategoryContent.ITEM_MAP.get("RUSS"))) {
-
+                if (!_categoriesList.contains(CategoryContent.ITEM_MAP.get(R.string.category_foreign))) {
+                    _categoriesList.add(CategoryContent.ITEM_MAP.get(R.string.category_foreign));
                 }
             }
         }
