@@ -44,6 +44,7 @@ public class ItemListActivity extends AppCompatActivity {
      */
     private boolean mTwoPane;
     private SongsDAO _sdao;
+    private List _songs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,21 +67,26 @@ public class ItemListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
-        CategoryContent.addItem( new CategoryContent.CategoryItem("1", getString(R.string.category_all), getString(R.string.category_all_desc)));
-        CategoryContent.addItem( new CategoryContent.CategoryItem("2", getString(R.string.category_russian), getString(R.string.category_russian_desc)));
-        CategoryContent.addItem( new CategoryContent.CategoryItem("3", getString(R.string.category_foreign), getString(R.string.category_foreign_desc)));
-        CategoryContent.addItem( new CategoryContent.CategoryItem("4", getString(R.string.category_rock), getString(R.string.category_rock_desc)));
-        CategoryContent.addItem( new CategoryContent.CategoryItem("5", getString(R.string.category_pop), getString(R.string.category_pop_desc)));
-        CategoryContent.addItem( new CategoryContent.CategoryItem("6", getString(R.string.category_shanson), getString(R.string.category_shanson_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem("ALL", getString(R.string.category_all), getString(R.string.category_all_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem("RUSS", getString(R.string.category_russian), getString(R.string.category_russian_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem("IMPORT", getString(R.string.category_foreign), getString(R.string.category_foreign_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem("ROCK", getString(R.string.category_rock), getString(R.string.category_rock_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem("POP", getString(R.string.category_pop), getString(R.string.category_pop_desc)));
+        CategoryContent.addItem( new CategoryContent.CategoryItem("SHANSON", getString(R.string.category_shanson), getString(R.string.category_shanson_desc)));
 
         _sdao = new SongsDAO(this);
 
-        // Прочитать файл с песнями с диска
-        try {
-            readFileFromStorage();
-        }
-        catch (Exception ex) {
-            Log.d("FILE", ex.getMessage());
+        _songs = _sdao.getAll();
+
+        if(_songs.size() == 0) {
+            // Прочитать файл с песнями с диска
+            try {
+                readFileFromStorage();
+
+                _songs = _sdao.getAll();
+            } catch (Exception ex) {
+                Log.d("FILE", ex.getMessage());
+            }
         }
     }
 

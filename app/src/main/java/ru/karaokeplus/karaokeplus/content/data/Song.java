@@ -3,7 +3,9 @@ package ru.karaokeplus.karaokeplus.content.data;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import ru.karaokeplus.karaokeplus.content.dao.Identify;
 
@@ -28,8 +30,14 @@ public class Song implements Identify, Parcelable {
     private String _songAuthor;
     private String _songCategories;
 
-    public Song() {
+    private List<CategoryContent.CategoryItem> _categoriesList = new ArrayList<CategoryContent.CategoryItem>();
 
+
+    public List<CategoryContent.CategoryItem> getCategories() {
+        return _categoriesList;
+    }
+
+    public Song() {
     }
 
     Song(Parcel in) {
@@ -70,6 +78,22 @@ public class Song implements Identify, Parcelable {
 
     public void setSongCategories(String songCategories) {
         _songCategories = songCategories;
+
+        String [] cats = _songCategories.split(",");
+
+        for(String cat : cats) {
+            if(cat.contains("русск")) {
+                if(!_categoriesList.contains(CategoryContent.ITEM_MAP.get("RUSS"))) {
+                    _categoriesList.add(CategoryContent.ITEM_MAP.get("RUSS"));
+                }
+
+            }
+            if(cat.contains("иностр")) {
+                if (!_categoriesList.contains(CategoryContent.ITEM_MAP.get("RUSS"))) {
+
+                }
+            }
+        }
     }
 
     @Override

@@ -13,30 +13,12 @@ import java.util.Map;
  */
 public class CategoryContent {
 
-    /**
-     * An array of sample (dummy) items.
-     */
     public static final List<CategoryItem> ITEMS = new ArrayList<CategoryItem>();
-
-    /**
-     * A map of sample (dummy) items, by ID.
-     */
     public static final Map<String, CategoryItem> ITEM_MAP = new HashMap<String, CategoryItem>();
-
-    private static final int COUNT = 25;
 
     public static void addItem(CategoryItem item) {
         ITEMS.add(item);
         ITEM_MAP.put(item.id, item);
-    }
-
-    private static String makeDetails(int position) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Details about Item: ").append(position);
-        for (int i = 0; i < position; i++) {
-            builder.append("\nMore details information here.");
-        }
-        return builder.toString();
     }
 
     /**
