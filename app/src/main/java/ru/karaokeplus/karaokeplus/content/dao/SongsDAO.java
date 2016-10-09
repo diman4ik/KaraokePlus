@@ -8,8 +8,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
-import java.util.List;
-
 import ru.karaokeplus.karaokeplus.content.DatabaseUtils;
 import ru.karaokeplus.karaokeplus.content.data.Song;
 
@@ -20,10 +18,11 @@ public class SongsDAO  extends AbstractDAO {
         public static final String SONGNAME = "name";
         public static final String SONGAUTHOR = "author";
         public static final String SONGCATEGORIES = "categories";
+        public static final String SONGCODE = "code";
     }
 
     public static final String PROJECTION[] = {
-            ID_COLUMN, Columns.SONGNAME, Columns.SONGAUTHOR, Columns.SONGCATEGORIES
+            ID_COLUMN, Columns.SONGNAME, Columns.SONGAUTHOR, Columns.SONGCATEGORIES, Columns.SONGCODE
     };
 
     public static final String SONGS_TABLE_NAME = "songs";
@@ -41,6 +40,7 @@ public class SongsDAO  extends AbstractDAO {
         tablebuilder.addColumn((new DatabaseUtils.ColumnBuilder()).text(Columns.SONGNAME));
         tablebuilder.addColumn((new DatabaseUtils.ColumnBuilder()).text(Columns.SONGAUTHOR));
         tablebuilder.addColumn((new DatabaseUtils.ColumnBuilder()).text(Columns.SONGCATEGORIES));
+        tablebuilder.addColumn((new DatabaseUtils.ColumnBuilder()).text(Columns.SONGCODE));
         tablebuilder.create(sqlitedatabase);
         DatabaseUtils.createIndex(sqlitedatabase, SONGS_TABLE_NAME, ID_COLUMN + "_index", new String[]{
                 ID_COLUMN
@@ -60,6 +60,7 @@ public class SongsDAO  extends AbstractDAO {
         ret.setSongName(getString(cursor, Columns.SONGNAME));
         ret.setSongAuthor(getString(cursor, Columns.SONGAUTHOR));
         ret.setSongCategories(getString(cursor, Columns.SONGCATEGORIES));
+        ret.setSongCode(getString(cursor, Columns.SONGCODE));
         return ret;
     }
 
@@ -88,6 +89,7 @@ public class SongsDAO  extends AbstractDAO {
         contentvalues.put(Columns.SONGNAME, song.getSongName());
         contentvalues.put(Columns.SONGAUTHOR, song.getSongAuthor());
         contentvalues.put(Columns.SONGCATEGORIES, song.getSongCategories());
+        contentvalues.put(Columns.SONGCODE, song.getSongCode());
         return contentvalues;
     }
 }

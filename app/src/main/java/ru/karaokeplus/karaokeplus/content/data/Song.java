@@ -4,7 +4,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import ru.karaokeplus.karaokeplus.R;
@@ -30,6 +29,8 @@ public class Song implements Identify, Parcelable {
     private String _songName;
     private String _songAuthor;
     private String _songCategories;
+    private String _code;
+
 
     private List<CategoryContent.CategoryItem> _categoriesList = new ArrayList<CategoryContent.CategoryItem>();
 
@@ -46,6 +47,7 @@ public class Song implements Identify, Parcelable {
         _songName = in.readString();
         _songAuthor = in.readString();
         _songCategories = in.readString();
+        _code = in.readString();
     }
 
     @Override
@@ -64,6 +66,8 @@ public class Song implements Identify, Parcelable {
     public String getSongCategories() {
         return _songCategories;
     }
+
+    public String getSongCode() { return _code; }
 
     public void setId(int id) {
         _id = id;
@@ -89,12 +93,31 @@ public class Song implements Identify, Parcelable {
                 }
 
             }
-            if(cat.contains("иностр")) {
+            else if(cat.contains("иностр")) {
                 if (!_categoriesList.contains(CategoryContent.ITEM_MAP.get(R.string.category_foreign))) {
                     _categoriesList.add(CategoryContent.ITEM_MAP.get(R.string.category_foreign));
                 }
             }
+            else if(cat.contains("рок")) {
+                if (!_categoriesList.contains(CategoryContent.ITEM_MAP.get(R.string.category_rock))) {
+                    _categoriesList.add(CategoryContent.ITEM_MAP.get(R.string.category_rock));
+                }
+            }
+            else if(cat.contains("поп")) {
+                if (!_categoriesList.contains(CategoryContent.ITEM_MAP.get(R.string.category_pop))) {
+                    _categoriesList.add(CategoryContent.ITEM_MAP.get(R.string.category_pop));
+                }
+            }
+            else if(cat.contains("шансон")) {
+                if (!_categoriesList.contains(CategoryContent.ITEM_MAP.get(R.string.category_shanson))) {
+                    _categoriesList.add(CategoryContent.ITEM_MAP.get(R.string.category_shanson));
+                }
+            }
         }
+    }
+
+    public void setSongCode(String code) {
+        _code = code;
     }
 
     @Override
