@@ -120,7 +120,7 @@ public class DatabaseUtils {
     }
 
 
-    public static final String AUTHORITY = "com.exchange.investorassistant.contentprovider";
+    public static final String AUTHORITY = "ru.karaokeplus.karaokeplus.contentprovider";
     private static final String COLUMN_TYPE_BLOB = "BLOB";
     private static final String COLUMN_TYPE_INTEGER = "INTEGER";
     private static final String COLUMN_TYPE_REAL = "REAL";
@@ -154,11 +154,11 @@ public class DatabaseUtils {
 
     public static Uri getUri(String s)
     {
-        return Uri.parse((new StringBuilder()).append("content://com.exchange.investorassistant.contentprovider/").append(s).toString());
+        return Uri.parse((new StringBuilder()).append("content://ru.karaokeplus.karaokeplus.contentprovider/").append(s).toString());
     }
 
     public static Uri getComplexUri(String table1, String table2) {
-        return Uri.parse((new StringBuilder()).append("content://com.exchange.investorassistant.contentprovider/").append(table1).append(COMPLEX_MATCH_SEPARATOR).append(table2).toString());
+        return Uri.parse((new StringBuilder()).append("content://ru.karaokeplus.karaokeplus.contentprovider/").append(table1).append(COMPLEX_MATCH_SEPARATOR).append(table2).toString());
     }
 
     public static String in(String s, int i, boolean flag)

@@ -42,7 +42,7 @@ public class ItemListActivity extends AppCompatActivity {
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
-    private boolean mTwoPane;
+    private boolean _twoPane;
     private SongsDAO _sdao;
     private List _songs;
 
@@ -64,7 +64,7 @@ public class ItemListActivity extends AppCompatActivity {
             // large-screen layouts (res/values-w900dp).
             // If this view is present, then the
             // activity should be in two-pane mode.
-            mTwoPane = true;
+            _twoPane = true;
         }
 
         CategoryContent.addItem( new CategoryContent.CategoryItem(R.string.category_all, getString(R.string.category_all), getString(R.string.category_all_desc)));
@@ -144,7 +144,7 @@ public class ItemListActivity extends AppCompatActivity {
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mTwoPane) {
+                    if (_twoPane) {
                         Bundle arguments = new Bundle();
                         arguments.putInt(ItemDetailFragment.ARG_ITEM_ID, holder.mItem.id);
                         ItemDetailFragment fragment = new ItemDetailFragment();

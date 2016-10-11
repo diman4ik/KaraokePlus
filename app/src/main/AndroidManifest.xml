@@ -31,6 +31,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="ru.karaokeplus.karaokeplus.ItemListActivity" />
         </activity>
+        <provider   android:authorities="ru.karaokeplus.karaokeplus.contentprovider" android:enabled="true" android:exported="false"
+            android:name="ru.karaokeplus.karaokeplus.content.provider.SongsContentProvider"
+            android:permission="ru.karaokeplus.karaokeplus.content.provider.permission.READ_WRITE_PROVIDER"/>
     </application>
 
 </manifest>
