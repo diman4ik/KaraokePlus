@@ -14,4 +14,5 @@
     <string name="category_pop_desc">This is all Pop Songs</string>
     <string name="category_shanson">Shanson Songs</string>
     <string name="category_shanson_desc">This is all Shanson Songs</string>
+    <string name="reload_menu">Reload Songs</string>
 </resources>

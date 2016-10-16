@@ -10,10 +10,11 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -21,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 import ru.karaokeplus.karaokeplus.content.dao.SongsDAO;
@@ -36,7 +38,7 @@ import ru.karaokeplus.karaokeplus.content.data.Song;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class ItemListActivity extends AppCompatActivity {
+public class CategoryListActivity extends AppCompatActivity {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
@@ -79,18 +81,43 @@ public class ItemListActivity extends AppCompatActivity {
         _songs = _sdao.getAll();
 
         if(_songs.size() == 0) {
-            // Прочитать файл с песнями с диска
-            try {
-                readFileFromStorage();
+            reloadSongs();
+        }
 
-                _songs = _sdao.getAll();
-            } catch (Exception ex) {
-                Log.d("FILE", ex.getMessage());
+        selectItem(0);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.action_reload: {
+                reloadSongs();
             }
+            break;
+            default:
+                break;
+        }
+
+        return true;
+    }
+
+    private void reloadSongs() {
+        // Прочитать файл с песнями с диска
+        try {
+            readFileFromStorage();
+           _songs = _sdao.getAll();
+        } catch (Exception ex) {
+            Log.d("FILE", ex.getMessage());
         }
     }
 
-    public void readFileFromStorage() throws IOException {
+    private void readFileFromStorage() throws IOException {
 
         String filename = "songs.txt";
         File myExternalFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(), filename);
@@ -102,12 +129,13 @@ public class ItemListActivity extends AppCompatActivity {
         Song song = new Song();
         while ((strLine = br.readLine()) != null) {
 
-            String [] items = strLine.split(" ");
+            String [] items = strLine.split("_");
 
-            if(items.length == 3) {
+            if(items.length == 4) {
                 song.setSongAuthor(items[0]);
                 song.setSongName(items[1]);
                 song.setSongCategories(items[2]);
+                song.setSongCode(items[3]);
 
                 _sdao.insert(song);
             }
@@ -117,6 +145,36 @@ public class ItemListActivity extends AppCompatActivity {
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(CategoryContent.ITEMS));
+    }
+
+    public  void selectItem(int position) {
+        CategoryContent.CategoryItem item = CategoryContent.ITEMS.get(position);
+        if (_twoPane) {
+            Bundle arguments = new Bundle();
+            arguments.putInt(ItemDetailFragment.ARG_ITEM_ID, item.id);
+            ItemDetailFragment fragment = new ItemDetailFragment();
+            fragment.setArguments(arguments);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.item_detail_container, fragment)
+                    .commit();
+        } else {
+            Intent intent = new Intent(this, ItemDetailActivity.class);
+            intent.putExtra(ItemDetailFragment.ARG_ITEM_ID, item.id);
+            startActivity(intent);
+        }
+    }
+
+    public List<Song> getSongs(CategoryContent.CategoryItem category) {
+        List<Song> ret = new ArrayList<>();
+
+        for(Song song : ((List<Song>)_songs)) {
+
+            if(song.getCategories().contains(category)) {
+                ret.add(song);
+            }
+        }
+
+        return ret;
     }
 
     public class SimpleItemRecyclerViewAdapter
@@ -138,7 +196,7 @@ public class ItemListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mItem = mValues.get(position);
-            holder.mIdView.setText(mValues.get(position).id);
+            //holder.mIdView.setText(mValues.get(position).id);
             holder.mContentView.setText(mValues.get(position).categoryName);
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
@@ -170,14 +228,12 @@ public class ItemListActivity extends AppCompatActivity {
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             public final View mView;
-            public final TextView mIdView;
             public final TextView mContentView;
             public CategoryContent.CategoryItem mItem;
 
             public ViewHolder(View view) {
                 super(view);
                 mView = view;
-                mIdView = (TextView) view.findViewById(R.id.id);
                 mContentView = (TextView) view.findViewById(R.id.content);
             }
 

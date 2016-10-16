@@ -86,6 +86,8 @@ public class Song implements Identify, Parcelable {
 
         String [] cats = _songCategories.split(",");
 
+        _categoriesList.add(CategoryContent.ITEM_MAP.get(R.string.category_all));
+
         for(String cat : cats) {
             if(cat.contains("русск")) {
                 if(!_categoriesList.contains(CategoryContent.ITEM_MAP.get(R.string.category_russian))) {
