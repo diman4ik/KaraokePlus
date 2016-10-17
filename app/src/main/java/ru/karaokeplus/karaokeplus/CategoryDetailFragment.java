@@ -19,10 +19,10 @@ import ru.karaokeplus.karaokeplus.content.data.Song;
 /**
  * A fragment representing a single Item detail screen.
  * This fragment is either contained in a {@link CategoryListActivity}
- * in two-pane mode (on tablets) or a {@link ItemDetailActivity}
+ * in two-pane mode (on tablets) or a {@link CategoryDetailActivity}
  * on handsets.
  */
-public class ItemDetailFragment extends ListFragment {
+public class CategoryDetailFragment extends ListFragment {
     /**
      * The fragment argument representing the item ID that this fragment
      * represents.
@@ -41,7 +41,7 @@ public class ItemDetailFragment extends ListFragment {
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public ItemDetailFragment() {
+    public CategoryDetailFragment() {
     }
 
     @Override
@@ -54,11 +54,11 @@ public class ItemDetailFragment extends ListFragment {
 
             mItem = CategoryContent.ITEM_MAP.get(categoryKey);
 
-            Activity activity = this.getActivity();
-            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-            if (appBarLayout != null) {
+            /*Activity activity = this.getActivity();
+            /*CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
+             (appBarLayout != null) {
                 appBarLayout.setTitle(mItem.categoryName);
-            }
+            }*/
         }
     }
 
@@ -69,7 +69,7 @@ public class ItemDetailFragment extends ListFragment {
 
         if (mItem != null) {
             //((TextView) rootView.findViewById(R.id.item_detail)).setText(mItem.categoryName);
-            _songs = ((CategoryListActivity)getActivity()).getSongs(mItem);
+            _songs = CategoryListActivity.getSongs(mItem);
 
             _adapter = new SongsAdapter(getActivity(), _songs);
             setListAdapter(_adapter);

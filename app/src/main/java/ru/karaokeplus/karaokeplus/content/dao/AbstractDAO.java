@@ -224,6 +224,10 @@ public abstract class AbstractDAO {
         return delete(identify.getId());
     }
 
+    public int deleteAll() {
+        return delete(getTableUri(), "", null);
+    }
+
     public int deleteAll(List list)
     {
         int ai[] = new int[list.size()];

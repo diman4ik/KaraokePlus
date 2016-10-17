@@ -15,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -34,7 +35,7 @@ import ru.karaokeplus.karaokeplus.content.data.Song;
  * An activity representing a list of Items. This activity
  * has different presentations for handset and tablet-size devices. On
  * handsets, the activity presents a list of items, which when touched,
- * lead to a {@link ItemDetailActivity} representing
+ * lead to a {@link CategoryDetailActivity} representing
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
@@ -46,7 +47,10 @@ public class CategoryListActivity extends AppCompatActivity {
      */
     private boolean _twoPane;
     private SongsDAO _sdao;
-    private List _songs;
+    private static List _songs;
+
+    private int _clickCounter;
+    private long _clickTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +60,27 @@ public class CategoryListActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
+
+        toolbar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                long clickTime = System.currentTimeMillis();
+                if( clickTime - _clickTime > 1000 ) {
+                    _clickCounter = 0;
+                }
+
+                _clickTime = clickTime;
+
+                _clickCounter += 1;
+
+                if(_clickCounter >= 5) {
+                    _clickCounter = 0;
+
+                    Toast.makeText(CategoryListActivity.this, R.string.reload_message, Toast.LENGTH_LONG).show();
+                    reloadSongs();
+                }
+            }
+        });
 
         View recyclerView = findViewById(R.id.item_list);
         assert recyclerView != null;
@@ -96,10 +121,10 @@ public class CategoryListActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
-            case R.id.action_reload: {
+            /*case R.id.action_reload: {
                 reloadSongs();
             }
-            break;
+            break;*/
             default:
                 break;
         }
@@ -110,6 +135,7 @@ public class CategoryListActivity extends AppCompatActivity {
     private void reloadSongs() {
         // Прочитать файл с песнями с диска
         try {
+            _sdao.deleteAll();
             readFileFromStorage();
            _songs = _sdao.getAll();
         } catch (Exception ex) {
@@ -151,20 +177,20 @@ public class CategoryListActivity extends AppCompatActivity {
         CategoryContent.CategoryItem item = CategoryContent.ITEMS.get(position);
         if (_twoPane) {
             Bundle arguments = new Bundle();
-            arguments.putInt(ItemDetailFragment.ARG_ITEM_ID, item.id);
-            ItemDetailFragment fragment = new ItemDetailFragment();
+            arguments.putInt(CategoryDetailFragment.ARG_ITEM_ID, item.id);
+            CategoryDetailFragment fragment = new CategoryDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.item_detail_container, fragment)
                     .commit();
         } else {
-            Intent intent = new Intent(this, ItemDetailActivity.class);
-            intent.putExtra(ItemDetailFragment.ARG_ITEM_ID, item.id);
+            Intent intent = new Intent(this, CategoryDetailActivity.class);
+            intent.putExtra(CategoryDetailFragment.ARG_ITEM_ID, item.id);
             startActivity(intent);
         }
     }
 
-    public List<Song> getSongs(CategoryContent.CategoryItem category) {
+    public static List<Song> getSongs(CategoryContent.CategoryItem category) {
         List<Song> ret = new ArrayList<>();
 
         for(Song song : ((List<Song>)_songs)) {
@@ -204,16 +230,16 @@ public class CategoryListActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     if (_twoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putInt(ItemDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-                        ItemDetailFragment fragment = new ItemDetailFragment();
+                        arguments.putInt(CategoryDetailFragment.ARG_ITEM_ID, holder.mItem.id);
+                        CategoryDetailFragment fragment = new CategoryDetailFragment();
                         fragment.setArguments(arguments);
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.item_detail_container, fragment)
                                 .commit();
                     } else {
                         Context context = v.getContext();
-                        Intent intent = new Intent(context, ItemDetailActivity.class);
-                        intent.putExtra(ItemDetailFragment.ARG_ITEM_ID, holder.mItem.id);
+                        Intent intent = new Intent(context, CategoryDetailActivity.class);
+                        intent.putExtra(CategoryDetailFragment.ARG_ITEM_ID, holder.mItem.id);
 
                         context.startActivity(intent);
                     }

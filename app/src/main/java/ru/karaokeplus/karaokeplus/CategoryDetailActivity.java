@@ -4,12 +4,17 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.ActionBar;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 /**
  * An activity representing a single Item detail screen. This
@@ -17,29 +22,40 @@ import android.view.MenuItem;
  * item details are presented side-by-side with a list of items
  * in a {@link CategoryListActivity}.
  */
-public class ItemDetailActivity extends AppCompatActivity {
+public class CategoryDetailActivity extends AppCompatActivity {
+
+    private DrawerLayout _drawerLayout;
+    private ListView _mainMenuList;
+
+    //private ActionBarDrawerToggle _drawerToggle;
+
+    private String [] _mainMenuItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_detail);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
+        _drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        _mainMenuList = (ListView) findViewById(R.id.leftmenu_items);
 
-        // Show the Up button in the action bar.
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+        _mainMenuItems = new String [] {
+                getString(R.string.category_all),
+                getString(R.string.category_russian),
+                getString(R.string.category_russian),
+                getString(R.string.category_foreign),
+                getString(R.string.category_rock),
+                getString(R.string.category_pop),
+                getString(R.string.category_shanson)
+        };
+
+        _mainMenuList.setAdapter(new ArrayAdapter<String>(this, R.layout.item_list_content, R.id.content, _mainMenuItems));
+
+        _mainMenuList.setOnItemClickListener(new DrawerItemClickListener());
+
 
         // savedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
@@ -54,9 +70,9 @@ public class ItemDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putString(ItemDetailFragment.ARG_ITEM_ID,
-                    getIntent().getStringExtra(ItemDetailFragment.ARG_ITEM_ID));
-            ItemDetailFragment fragment = new ItemDetailFragment();
+            arguments.putInt(CategoryDetailFragment.ARG_ITEM_ID,
+                    getIntent().getIntExtra(CategoryDetailFragment.ARG_ITEM_ID, 0));
+            CategoryDetailFragment fragment = new CategoryDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.item_detail_container, fragment)
@@ -111,4 +127,14 @@ public class ItemDetailActivity extends AppCompatActivity {
         }*/
         return super.onCreateOptionsMenu(menu);
     }
+
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            _mainMenuList.setItemChecked( -1, true);
+
+            _mainMenuList.setItemChecked(position, true);
+        }
+    }
+
 }

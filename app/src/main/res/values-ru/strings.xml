@@ -16,4 +16,5 @@
     <string name="category_shanson">Песни шансона</string>
     <string name="category_shanson_desc">Все песни шансона</string>
     <string name="reload_menu">Перезагрузить песни</string>
+    <string name="reload_message">Перезагрузка списка песен ...</string>
 </resources>
