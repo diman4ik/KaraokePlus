@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">KaraokePlus</string>
     <string name="title_item_detail">Item Detail</string>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
 
     <string name="category_all">All Songs</string>
     <string name="category_all_desc">This is all songs</string>

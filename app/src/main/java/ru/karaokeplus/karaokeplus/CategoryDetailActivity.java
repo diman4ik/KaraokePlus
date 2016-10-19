@@ -3,6 +3,7 @@ package ru.karaokeplus.karaokeplus;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
@@ -12,9 +13,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
+
+import ru.karaokeplus.karaokeplus.content.data.CategoryContent;
 
 /**
  * An activity representing a single Item detail screen. This
@@ -27,9 +32,11 @@ public class CategoryDetailActivity extends AppCompatActivity {
     private DrawerLayout _drawerLayout;
     private ListView _mainMenuList;
 
-    //private ActionBarDrawerToggle _drawerToggle;
-
     private String [] _mainMenuItems;
+    private CategoryDetailFragment _fragment;
+    private ViewGroup _leftDrawer;
+    private ActionBarDrawerToggle _drawerToggle;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +45,13 @@ public class CategoryDetailActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+
+        toolbar.setNavigationIcon(R.drawable.menu_black);
+
+        getSupportActionBar().setTitle(getString(R.string.app_name));
 
         _drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         _mainMenuList = (ListView) findViewById(R.id.leftmenu_items);
@@ -53,9 +67,29 @@ public class CategoryDetailActivity extends AppCompatActivity {
         };
 
         _mainMenuList.setAdapter(new ArrayAdapter<String>(this, R.layout.item_list_content, R.id.content, _mainMenuItems));
-
         _mainMenuList.setOnItemClickListener(new DrawerItemClickListener());
 
+        _leftDrawer = (ViewGroup)findViewById(R.id.left_drawer);
+
+        // ActionBarDrawerToggle ties together the the proper interactions
+        // between the sliding drawer and the action bar app icon
+        _drawerToggle = new ActionBarDrawerToggle(
+                this,                  /* host Activity */
+                _drawerLayout,         /* DrawerLayout object */
+                R.drawable.ic_drawer,  /* nav drawer image to replace 'Up' caret */
+                R.string.drawer_open,  /* "open drawer" description for accessibility */
+                R.string.drawer_close  /* "close drawer" description for accessibility */
+        ) {
+            public void onDrawerClosed(View view) {
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+
+            public void onDrawerOpened(View drawerView) {
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+        };
+
+        _drawerLayout.setDrawerListener(_drawerToggle);
 
         // savedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
@@ -67,33 +101,26 @@ public class CategoryDetailActivity extends AppCompatActivity {
         // http://developer.android.com/guide/components/fragments.html
         //
         if (savedInstanceState == null) {
-            // Create the detail fragment and add it to the activity
-            // using a fragment transaction.
             Bundle arguments = new Bundle();
             arguments.putInt(CategoryDetailFragment.ARG_ITEM_ID,
                     getIntent().getIntExtra(CategoryDetailFragment.ARG_ITEM_ID, 0));
-            CategoryDetailFragment fragment = new CategoryDetailFragment();
-            fragment.setArguments(arguments);
+            _fragment = new CategoryDetailFragment();
+            _fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.item_detail_container, fragment)
+                    .add(R.id.item_detail_container, _fragment)
                     .commit();
         }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == android.R.id.home) {
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. Use NavUtils to allow users
-            // to navigate up one level in the application structure. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
-            NavUtils.navigateUpTo(this, new Intent(this, CategoryListActivity.class));
+
+        // The action bar home/up action should open or close the drawer.
+        // ActionBarDrawerToggle will take care of this.
+        if (_drawerToggle.onOptionsItemSelected(item)) {
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -133,8 +160,18 @@ public class CategoryDetailActivity extends AppCompatActivity {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             _mainMenuList.setItemChecked( -1, true);
 
+            String mainMenuItem = _mainMenuItems[position];
+
+            for(CategoryContent.CategoryItem item : CategoryContent.ITEMS) {
+
+                if(item.categoryName.equals(mainMenuItem)) {
+                    _fragment.setCategory(item);
+                    break;
+                }
+            }
+
             _mainMenuList.setItemChecked(position, true);
+            _drawerLayout.closeDrawer(_leftDrawer);
         }
     }
-
 }

@@ -29,10 +29,7 @@ public class CategoryDetailFragment extends ListFragment {
      */
     public static final String ARG_ITEM_ID = "item_id";
 
-    /**
-     * The dummy content this fragment is presenting.
-     */
-    private CategoryContent.CategoryItem mItem;
+    private CategoryContent.CategoryItem _category;
 
     private List<Song> _songs;
     private SongsAdapter _adapter;
@@ -52,13 +49,7 @@ public class CategoryDetailFragment extends ListFragment {
 
             Integer categoryKey = getArguments().getInt(ARG_ITEM_ID);
 
-            mItem = CategoryContent.ITEM_MAP.get(categoryKey);
-
-            /*Activity activity = this.getActivity();
-            /*CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-             (appBarLayout != null) {
-                appBarLayout.setTitle(mItem.categoryName);
-            }*/
+            _category = CategoryContent.ITEM_MAP.get(categoryKey);
         }
     }
 
@@ -67,15 +58,19 @@ public class CategoryDetailFragment extends ListFragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.item_detail, container, false);
 
-        if (mItem != null) {
+        if (_category != null) {
             //((TextView) rootView.findViewById(R.id.item_detail)).setText(mItem.categoryName);
-            _songs = CategoryListActivity.getSongs(mItem);
-
-            _adapter = new SongsAdapter(getActivity(), _songs);
-            setListAdapter(_adapter);
+           setCategory(_category);
         }
 
         return rootView;
+    }
+
+    public void setCategory(CategoryContent.CategoryItem category) {
+        _songs = CategoryListActivity.getSongs(category);
+
+        _adapter = new SongsAdapter(getActivity(), _songs);
+        setListAdapter(_adapter);
     }
 
     class SongsAdapter extends ArrayAdapter<Song> {
