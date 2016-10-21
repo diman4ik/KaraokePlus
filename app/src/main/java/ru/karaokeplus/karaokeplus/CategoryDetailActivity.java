@@ -1,16 +1,20 @@
 package ru.karaokeplus.karaokeplus;
 
+import android.annotation.TargetApi;
 import android.app.SearchManager;
 import android.content.Context;
-import android.content.Intent;
-import android.content.res.Configuration;
+import android.database.Cursor;
+import android.database.MatrixCursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v4.app.NavUtils;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,9 +22,13 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
+import android.widget.TextView;
+
+import java.util.List;
 
 import ru.karaokeplus.karaokeplus.content.data.CategoryContent;
+import ru.karaokeplus.karaokeplus.content.data.Song;
+
 
 /**
  * An activity representing a single Item detail screen. This
@@ -33,10 +41,12 @@ public class CategoryDetailActivity extends AppCompatActivity {
     private DrawerLayout _drawerLayout;
     private ListView _mainMenuList;
 
-    private String [] _mainMenuItems;
+    private String[] _mainMenuItems;
     private CategoryDetailFragment _fragment;
     private ViewGroup _leftDrawer;
     private ActionBarDrawerToggle _drawerToggle;
+
+    private SearchView _searchView;
 
 
     @Override
@@ -53,12 +63,10 @@ public class CategoryDetailActivity extends AppCompatActivity {
 
         toolbar.setNavigationIcon(R.drawable.menu_black);
 
-        getSupportActionBar().setTitle(getString(R.string.app_name));
-
         _drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         _mainMenuList = (ListView) findViewById(R.id.leftmenu_items);
 
-        _mainMenuItems = new String [] {
+        _mainMenuItems = new String[]{
                 getString(R.string.category_all),
                 getString(R.string.category_russian),
                 getString(R.string.category_russian),
@@ -71,7 +79,7 @@ public class CategoryDetailActivity extends AppCompatActivity {
         _mainMenuList.setAdapter(new ArrayAdapter<String>(this, R.layout.item_list_content, R.id.content, _mainMenuItems));
         _mainMenuList.setOnItemClickListener(new DrawerItemClickListener());
 
-        _leftDrawer = (ViewGroup)findViewById(R.id.left_drawer);
+        _leftDrawer = (ViewGroup) findViewById(R.id.left_drawer);
 
         // ActionBarDrawerToggle ties together the the proper interactions
         // between the sliding drawer and the action bar app icon
@@ -130,43 +138,66 @@ public class CategoryDetailActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.action_search);
-        SearchManager searchManager = (SearchManager)getSystemService(Context.SEARCH_SERVICE);
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
 
-        /*if (searchItem != null) {
-            searchView = (SearchView) searchItem.getActionView();
-        }
-        if (searchView != null) {
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
+        _searchView =
+                (SearchView) menu.findItem(R.id.action_search).getActionView();
+        _searchView.setSearchableInfo(
+                searchManager.getSearchableInfo(getComponentName()));
 
-            queryTextListener = new SearchView.OnQueryTextListener() {
-                @Override
-                public boolean onQueryTextChange(String newText) {
-                    Log.i("onQueryTextChange", newText);
+        _searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
-                    return true;
-                }
-                @Override
-                public boolean onQueryTextSubmit(String query) {
-                    Log.i("onQueryTextSubmit", query);
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return true;
+            }
 
-                    return true;
-                }
-            };
-            searchView.setOnQueryTextListener(queryTextListener);
-        }*/
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                loadSearchResult(newText);
+                return false;
+            }
+        });
+
         return super.onCreateOptionsMenu(menu);
+    }
+
+
+    // History
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    private void loadSearchResult(String query) {
+
+        List<Song> items = CategoryListActivity.getSongs(CategoryContent.ITEM_MAP.get(R.string.category_all));
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            String [] columns =  new String [] { "_id", "author", "song"};
+            Object[] temp = new Object[] { 0, "none", "none" };
+
+            MatrixCursor cursor = new MatrixCursor(columns);
+
+            for(int i = 0; i < items.size(); i++) {
+                temp[0] = i;
+                temp[1] = items.get(i).getSongAuthor();
+                temp[2] = items.get(i).getSongName();
+                cursor.addRow(temp);
+            }
+
+            // SearchView
+            SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+            _searchView.setSuggestionsAdapter(new ExampleAdapter(this, cursor, items));
+        }
     }
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            _mainMenuList.setItemChecked( -1, true);
+            _mainMenuList.setItemChecked(-1, true);
 
             String mainMenuItem = _mainMenuItems[position];
 
-            for(CategoryContent.CategoryItem item : CategoryContent.ITEMS) {
+            for (CategoryContent.CategoryItem item : CategoryContent.ITEMS) {
 
-                if(item.categoryName.equals(mainMenuItem)) {
+                if (item.categoryName.equals(mainMenuItem)) {
                     _fragment.setCategory(item);
                     break;
                 }
@@ -174,6 +205,42 @@ public class CategoryDetailActivity extends AppCompatActivity {
 
             _mainMenuList.setItemChecked(position, true);
             _drawerLayout.closeDrawer(_leftDrawer);
+        }
+    }
+
+    public class ExampleAdapter extends CursorAdapter {
+
+        private List<Song> items;
+
+        private TextView textAuthor;
+        private TextView textSong;
+
+
+        public ExampleAdapter(Context context, Cursor cursor, List<Song> items) {
+
+            super(context, cursor, false);
+
+            this.items = items;
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            textAuthor.setText(items.get(cursor.getPosition()).getSongAuthor());
+            textSong.setText(items.get(cursor.getPosition()).getSongName());
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+
+            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            View view = inflater.inflate(R.layout.search_item, parent, false);
+
+            textAuthor = (TextView) view.findViewById(R.id.item_author);
+            textSong = (TextView) view.findViewById(R.id.item_song);
+
+            return view;
+
         }
     }
 }
