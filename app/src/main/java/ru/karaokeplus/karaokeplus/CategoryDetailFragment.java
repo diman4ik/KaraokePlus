@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import ru.karaokeplus.karaokeplus.content.dao.SongsDAO;
 import ru.karaokeplus.karaokeplus.content.data.CategoryContent;
 import ru.karaokeplus.karaokeplus.content.data.Song;
 
@@ -31,6 +32,7 @@ public class CategoryDetailFragment extends ListFragment {
 
     private CategoryContent.CategoryItem _category;
 
+    private SongsDAO _sdao;
     private List<Song> _songs;
     private SongsAdapter _adapter;
 
@@ -44,6 +46,8 @@ public class CategoryDetailFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        _sdao = new SongsDAO(getActivity());
 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
 
@@ -59,7 +63,6 @@ public class CategoryDetailFragment extends ListFragment {
         View rootView = inflater.inflate(R.layout.item_detail, container, false);
 
         if (_category != null) {
-            //((TextView) rootView.findViewById(R.id.item_detail)).setText(mItem.categoryName);
            setCategory(_category);
         }
 
@@ -67,7 +70,7 @@ public class CategoryDetailFragment extends ListFragment {
     }
 
     public void setCategory(CategoryContent.CategoryItem category) {
-        _songs = CategoryListActivity.getSongs(category);
+        _songs = Utils.filterByCategory(_sdao.getAll(), category);
 
         _adapter = new SongsAdapter(getActivity(), _songs);
         setListAdapter(_adapter);

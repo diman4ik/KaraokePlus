@@ -42,6 +42,12 @@ public class Song implements Identify, Parcelable {
     public Song() {
     }
 
+    public Song(String author, String name, String categories) {
+        _songAuthor = author;
+        _songName = name;
+        _songCategories = categories;
+    }
+
     Song(Parcel in) {
         _id = in.readInt();
         _songName = in.readString();

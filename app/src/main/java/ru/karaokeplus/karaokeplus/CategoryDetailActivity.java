@@ -7,12 +7,14 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,9 +25,15 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
+import ru.karaokeplus.karaokeplus.content.dao.SongsDAO;
 import ru.karaokeplus.karaokeplus.content.data.CategoryContent;
 import ru.karaokeplus.karaokeplus.content.data.Song;
 
@@ -48,6 +56,12 @@ public class CategoryDetailActivity extends AppCompatActivity {
 
     private SearchView _searchView;
 
+    private int _clickCounter;
+    private long _clickTime;
+
+    private SongsDAO _sdao;
+    private static List _songs;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,12 +77,33 @@ public class CategoryDetailActivity extends AppCompatActivity {
 
         toolbar.setNavigationIcon(R.drawable.menu_black);
 
+        toolbar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                long clickTime = System.currentTimeMillis();
+                if( clickTime - _clickTime > 1000 ) {
+                    _clickCounter = 0;
+                }
+
+                _clickTime = clickTime;
+
+                _clickCounter += 1;
+
+                if(_clickCounter >= 5) {
+                    _clickCounter = 0;
+
+                    Toast.makeText(CategoryDetailActivity.this, R.string.reload_message, Toast.LENGTH_LONG).show();
+                    reloadSongs();
+                }
+            }
+        });
+
+
         _drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         _mainMenuList = (ListView) findViewById(R.id.leftmenu_items);
 
         _mainMenuItems = new String[]{
                 getString(R.string.category_all),
-                getString(R.string.category_russian),
                 getString(R.string.category_russian),
                 getString(R.string.category_foreign),
                 getString(R.string.category_rock),
@@ -100,6 +135,15 @@ public class CategoryDetailActivity extends AppCompatActivity {
         };
 
         _drawerLayout.setDrawerListener(_drawerToggle);
+
+        _sdao = new SongsDAO(this);
+
+        _songs = _sdao.getAll();
+
+        if (_songs.size() == 0) {
+            reloadSongs();
+            _fragment.setCategory(CategoryContent.ITEM_MAP.get(R.string.category_all));
+        }
 
         // savedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
@@ -162,29 +206,93 @@ public class CategoryDetailActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    private void reloadSongs() {
+        // Прочитать файл с песнями с диска
+        try {
+            _sdao.deleteAll();
+            List<Song> songs = Utils.readFileFromStorage();
 
-    // History
+            for(Song sng : songs) {
+                _sdao.insert(sng);
+            }
+
+            _songs = _sdao.getAll();
+        } catch (Exception ex) {
+            Log.d("FILE", ex.getMessage());
+        }
+    }
+
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void loadSearchResult(String query) {
 
-        List<Song> items = CategoryListActivity.getSongs(CategoryContent.ITEM_MAP.get(R.string.category_all));
+        query = query.toLowerCase();
+
+        if(query.length() == 0)
+            return;
+
+        List<Song> items = Utils.filterByCategory(_songs, (CategoryContent.ITEM_MAP.get(R.string.category_all)));
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            String [] columns =  new String [] { "_id", "author", "song"};
-            Object[] temp = new Object[] { 0, "none", "none" };
+            List<SongSuggestion> suggestions = new ArrayList<SongSuggestion>();
+            String [] columns =  new String [] { "_id"};
+            Object[] temp = new Object[] { 0 };
+
+            for(Song item : items) {
+                suggestions.add(new SongSuggestion(item.getSongAuthor(), item.getSongName()));
+            }
 
             MatrixCursor cursor = new MatrixCursor(columns);
 
+            int counter = items.size();
+            String author = "";
+
+            // Добавить сооответствующих исполнителей
             for(int i = 0; i < items.size(); i++) {
-                temp[0] = i;
-                temp[1] = items.get(i).getSongAuthor();
-                temp[2] = items.get(i).getSongName();
-                cursor.addRow(temp);
+                if(author.equals(items.get(i).getSongAuthor().toLowerCase()))
+                    continue;
+
+                author = items.get(i).getSongAuthor().toLowerCase();
+
+                if(author.contains(query)) {
+                    temp[0] = counter++;
+                    cursor.addRow(temp);
+                    suggestions.add(new SongSuggestion(items.get(i).getSongAuthor(), ""));
+                }
+            }
+
+
+            // Добавить песни исполнителей
+            for(int i = 0; i < items.size(); i++) {
+
+                author = items.get(i).getSongAuthor().toLowerCase();
+                String songname = items.get(i).getSongName().toLowerCase();
+
+                if(author.contains(query) && songname.length() > 0) {
+                    temp[0] = i;
+                    cursor.addRow(temp);
+                }
+                else {
+                    if( query.length() > 1 && songname.contains(query)) {
+                        temp[0] = i;
+                        cursor.addRow(temp);
+                    }
+                }
             }
 
             // SearchView
             SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-            _searchView.setSuggestionsAdapter(new ExampleAdapter(this, cursor, items));
+            _searchView.setSuggestionsAdapter(new ExampleAdapter(this, cursor, suggestions));
+            _searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
+                @Override
+                public boolean onSuggestionSelect(int position) {
+                    return false;
+                }
+
+                @Override
+                public boolean onSuggestionClick(int position) {
+                    return true;
+                }
+            });
         }
     }
 
@@ -208,25 +316,34 @@ public class CategoryDetailActivity extends AppCompatActivity {
         }
     }
 
-    public class ExampleAdapter extends CursorAdapter {
+    class SongSuggestion {
+        public String author;
+        public String songname;
 
-        private List<Song> items;
+        public SongSuggestion(String author, String song) {
+            this.author = author;
+            this.songname = song;
+        }
+    }
+
+    class ExampleAdapter extends CursorAdapter {
+
+        private List<SongSuggestion> items;
 
         private TextView textAuthor;
         private TextView textSong;
 
 
-        public ExampleAdapter(Context context, Cursor cursor, List<Song> items) {
-
+        public ExampleAdapter(Context context, Cursor cursor, List<SongSuggestion> items) {
             super(context, cursor, false);
-
             this.items = items;
         }
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            textAuthor.setText(items.get(cursor.getPosition()).getSongAuthor());
-            textSong.setText(items.get(cursor.getPosition()).getSongName());
+            int index = cursor.getInt(0);
+            textAuthor.setText(items.get(index).author);
+            textSong.setText(items.get(index).songname);
         }
 
         @Override
@@ -240,7 +357,6 @@ public class CategoryDetailActivity extends AppCompatActivity {
             textSong = (TextView) view.findViewById(R.id.item_song);
 
             return view;
-
         }
     }
 }

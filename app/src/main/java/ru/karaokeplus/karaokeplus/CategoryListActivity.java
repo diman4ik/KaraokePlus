@@ -103,12 +103,14 @@ public class CategoryListActivity extends AppCompatActivity {
         CategoryContent.addItem( new CategoryContent.CategoryItem(R.string.category_pop, getString(R.string.category_pop), getString(R.string.category_pop_desc)));
         CategoryContent.addItem( new CategoryContent.CategoryItem(R.string.category_shanson, getString(R.string.category_shanson), getString(R.string.category_shanson_desc)));
 
-        _sdao = new SongsDAO(this);
+        if(_twoPane) {
+            _sdao = new SongsDAO(this);
 
-        _songs = _sdao.getAll();
+            _songs = _sdao.getAll();
 
-        if(_songs.size() == 0) {
-            reloadSongs();
+            if (_songs.size() == 0) {
+                reloadSongs();
+            }
         }
 
         selectItem(0);
@@ -123,10 +125,6 @@ public class CategoryListActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
-            /*case R.id.action_reload: {
-                reloadSongs();
-            }
-            break;*/
             default:
                 break;
         }
@@ -138,37 +136,16 @@ public class CategoryListActivity extends AppCompatActivity {
         // Прочитать файл с песнями с диска
         try {
             _sdao.deleteAll();
-            readFileFromStorage();
+            List<Song> songs = Utils.readFileFromStorage();
+
+            for(Song sng : songs) {
+                _sdao.insert(sng);
+            }
+
            _songs = _sdao.getAll();
         } catch (Exception ex) {
             Log.d("FILE", ex.getMessage());
         }
-    }
-
-    private void readFileFromStorage() throws IOException {
-
-        String filename = "songs.txt";
-        File myExternalFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(), filename);
-
-        FileInputStream fis = new FileInputStream(myExternalFile);
-        DataInputStream in = new DataInputStream(fis);
-        BufferedReader br = new BufferedReader(new InputStreamReader(in));
-        String strLine;
-        Song song = new Song();
-        while ((strLine = br.readLine()) != null) {
-
-            String [] items = strLine.split("_");
-
-            if(items.length == 4) {
-                song.setSongAuthor(items[0]);
-                song.setSongName(items[1]);
-                song.setSongCategories(items[2]);
-                song.setSongCode(items[3]);
-
-                _sdao.insert(song);
-            }
-        }
-        in.close();
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
@@ -192,7 +169,7 @@ public class CategoryListActivity extends AppCompatActivity {
         }
     }
 
-    public static List<Song> getSongs(CategoryContent.CategoryItem category) {
+    private List<Song> getSongs(CategoryContent.CategoryItem category) {
         List<Song> ret = new ArrayList<>();
 
         for(Song song : ((List<Song>)_songs)) {
