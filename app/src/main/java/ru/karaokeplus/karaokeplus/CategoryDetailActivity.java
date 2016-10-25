@@ -7,8 +7,8 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -28,10 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 import ru.karaokeplus.karaokeplus.content.dao.SongsDAO;
 import ru.karaokeplus.karaokeplus.content.data.CategoryContent;
@@ -55,12 +52,15 @@ public class CategoryDetailActivity extends AppCompatActivity {
     private ActionBarDrawerToggle _drawerToggle;
 
     private SearchView _searchView;
+    private MenuItem _searchItem;
 
     private int _clickCounter;
     private long _clickTime;
 
     private SongsDAO _sdao;
     private static List _songs;
+
+    CategoryContent.CategoryItem _selectedCategory  = CategoryContent.ITEM_MAP.get(R.string.category_all);
 
 
     @Override
@@ -142,7 +142,6 @@ public class CategoryDetailActivity extends AppCompatActivity {
 
         if (_songs.size() == 0) {
             reloadSongs();
-            _fragment.setCategory(CategoryContent.ITEM_MAP.get(R.string.category_all));
         }
 
         // savedInstanceState is non-null when there is fragment state
@@ -181,7 +180,21 @@ public class CategoryDetailActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
-        MenuItem searchItem = menu.findItem(R.id.action_search);
+        _searchItem = menu.findItem(R.id.action_search);
+
+        MenuItemCompat.setOnActionExpandListener(_searchItem, new MenuItemCompat.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem menuItem) {
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem menuItem) {
+                _fragment.setCategory(_selectedCategory);
+                return true;
+            }
+        });
+
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
 
         _searchView =
@@ -230,15 +243,15 @@ public class CategoryDetailActivity extends AppCompatActivity {
         if(query.length() == 0)
             return;
 
-        List<Song> items = Utils.filterByCategory(_songs, (CategoryContent.ITEM_MAP.get(R.string.category_all)));
+        List<Song> items = Utils.filterByCategory(_songs, _selectedCategory);
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            List<SongSuggestion> suggestions = new ArrayList<SongSuggestion>();
+            final List<SongSuggestion> suggestions = new ArrayList<SongSuggestion>();
             String [] columns =  new String [] { "_id"};
             Object[] temp = new Object[] { 0 };
 
             for(Song item : items) {
-                suggestions.add(new SongSuggestion(item.getSongAuthor(), item.getSongName()));
+                suggestions.add(new SongSuggestion(item));
             }
 
             MatrixCursor cursor = new MatrixCursor(columns);
@@ -253,10 +266,19 @@ public class CategoryDetailActivity extends AppCompatActivity {
 
                 author = items.get(i).getSongAuthor().toLowerCase();
 
-                if(author.contains(query)) {
-                    temp[0] = counter++;
-                    cursor.addRow(temp);
-                    suggestions.add(new SongSuggestion(items.get(i).getSongAuthor(), ""));
+                if(query.length() > 2) {
+                    if (author.contains(query)) {
+                        temp[0] = counter++;
+                        cursor.addRow(temp);
+                        suggestions.add(new SongSuggestion(items.get(i).getSongAuthor(), ""));
+                    }
+                }
+                else {
+                    if (author.startsWith(query)) {
+                        temp[0] = counter++;
+                        cursor.addRow(temp);
+                        suggestions.add(new SongSuggestion(items.get(i).getSongAuthor(), ""));
+                    }
                 }
             }
 
@@ -267,12 +289,16 @@ public class CategoryDetailActivity extends AppCompatActivity {
                 author = items.get(i).getSongAuthor().toLowerCase();
                 String songname = items.get(i).getSongName().toLowerCase();
 
-                if(author.contains(query) && songname.length() > 0) {
+                if(author.startsWith(query) && songname.length() > 0) {
+                    temp[0] = i;
+                    cursor.addRow(temp);
+                }
+                else if(query.length() > 2 && author.contains(query) && songname.length() > 0) {
                     temp[0] = i;
                     cursor.addRow(temp);
                 }
                 else {
-                    if( query.length() > 1 && songname.contains(query)) {
+                    if( query.length() > 2 && songname.contains(query)) {
                         temp[0] = i;
                         cursor.addRow(temp);
                     }
@@ -280,19 +306,43 @@ public class CategoryDetailActivity extends AppCompatActivity {
             }
 
             // SearchView
-            SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
             _searchView.setSuggestionsAdapter(new ExampleAdapter(this, cursor, suggestions));
             _searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
                 @Override
                 public boolean onSuggestionSelect(int position) {
-                    return false;
+                    return true;
                 }
 
                 @Override
                 public boolean onSuggestionClick(int position) {
+
+                    Cursor searchCursor = _searchView.getSuggestionsAdapter().getCursor();
+                    if(searchCursor.moveToPosition(position)) {
+                        int index = searchCursor.getInt(0);
+                        setListBasedOnSuggestion(suggestions, suggestions.get(index));
+                        _searchView.setIconified(true);
+                    }
+
+                    //MenuItemCompat.collapseActionView(_searchItem);
                     return true;
                 }
             });
+        }
+    }
+
+    private void setListBasedOnSuggestion(List<SongSuggestion> suggestions, SongSuggestion suggestion) {
+        if(suggestion.author.length() > 0 && suggestion.songname.length() > 0) {
+            List<Song> songs = new ArrayList<Song>();
+            songs.add(suggestion.song);
+            _fragment.setSongs(songs);
+        }
+        else if(suggestion.author.length() > 0) {
+            List<Song> songs = new ArrayList<Song>();
+            for(SongSuggestion song : suggestions) {
+                if(song.author.equals(suggestion.author) && song.song != null)
+                    songs.add(song.song);
+            }
+            _fragment.setSongs(songs);
         }
     }
 
@@ -306,7 +356,8 @@ public class CategoryDetailActivity extends AppCompatActivity {
             for (CategoryContent.CategoryItem item : CategoryContent.ITEMS) {
 
                 if (item.categoryName.equals(mainMenuItem)) {
-                    _fragment.setCategory(item);
+                    _selectedCategory = item;
+                    _fragment.setCategory(_selectedCategory);
                     break;
                 }
             }
@@ -319,10 +370,17 @@ public class CategoryDetailActivity extends AppCompatActivity {
     class SongSuggestion {
         public String author;
         public String songname;
+        public Song song;
 
         public SongSuggestion(String author, String song) {
             this.author = author;
             this.songname = song;
+        }
+
+        public SongSuggestion(Song song) {
+            this.songname = song.getSongName();
+            this.author = song.getSongAuthor();
+            this.song = song;
         }
     }
 

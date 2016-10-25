@@ -8,10 +8,11 @@
         android:id="@+id/item_author"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="5dp"/>
+        android:layout_marginRight="5dp"
+        android:textSize="17dp"/>
     <TextView
         android:id="@+id/item_song"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
+        android:layout_height="wrap_content"
+        android:textSize="17dp"/>
 </LinearLayout>

@@ -65,12 +65,22 @@ public class CategoryDetailFragment extends ListFragment {
         if (_category != null) {
            setCategory(_category);
         }
+        else {
+            setCategory(CategoryContent.ITEM_MAP.get(R.string.category_all));
+        }
 
         return rootView;
     }
 
     public void setCategory(CategoryContent.CategoryItem category) {
         _songs = Utils.filterByCategory(_sdao.getAll(), category);
+
+        _adapter = new SongsAdapter(getActivity(), _songs);
+        setListAdapter(_adapter);
+    }
+
+    public void setSongs(List<Song> songs) {
+        _songs = songs;
 
         _adapter = new SongsAdapter(getActivity(), _songs);
         setListAdapter(_adapter);
