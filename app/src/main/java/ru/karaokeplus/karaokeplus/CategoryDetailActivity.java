@@ -94,6 +94,7 @@ public class CategoryDetailActivity extends AppCompatActivity {
 
                     Toast.makeText(CategoryDetailActivity.this, R.string.reload_message, Toast.LENGTH_LONG).show();
                     reloadSongs();
+                    _fragment.setCategory(_selectedCategory);
                 }
             }
         });
