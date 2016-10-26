@@ -163,8 +163,11 @@ public class CategoryDetailActivity extends AppCompatActivity {
             _fragment = new CategoryDetailFragment();
             _fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.item_detail_container, _fragment)
+                    .add(R.id.item_detail_container, _fragment, "FRAGMENT_TAG")
                     .commit();
+        }
+        else {
+            _fragment = (CategoryDetailFragment) getSupportFragmentManager().findFragmentByTag("FRAGMENT_TAG");
         }
     }
 

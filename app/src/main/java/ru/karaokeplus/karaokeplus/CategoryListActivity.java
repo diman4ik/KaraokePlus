@@ -131,6 +131,10 @@ public class CategoryListActivity extends AppCompatActivity {
         }
 
         selectItem(0);
+
+        if (savedInstanceState != null) {
+            _fragment = (CategoryDetailFragment) getSupportFragmentManager().findFragmentByTag("FRAGMENT_TAG");
+        }
     }
 
     @Override
@@ -317,7 +321,7 @@ public class CategoryListActivity extends AppCompatActivity {
                 _fragment = new CategoryDetailFragment();
                 _fragment.setArguments(arguments);
                 getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.item_detail_container, _fragment)
+                        .replace(R.id.item_detail_container, _fragment, "FRAGMENT_TAG")
                         .commit();
             }
             else {
@@ -327,6 +331,7 @@ public class CategoryListActivity extends AppCompatActivity {
             Intent intent = new Intent(this, CategoryDetailActivity.class);
             intent.putExtra(CategoryDetailFragment.ARG_ITEM_ID, item.id);
             startActivity(intent);
+            finish();
         }
     }
 
@@ -363,7 +368,7 @@ public class CategoryListActivity extends AppCompatActivity {
                             _fragment = new CategoryDetailFragment();
                             _fragment.setArguments(arguments);
                             getSupportFragmentManager().beginTransaction()
-                                    .replace(R.id.item_detail_container, _fragment)
+                                    .replace(R.id.item_detail_container, _fragment, "FRAGMENT_TAG")
                                     .commit();
                         }
                         else {
@@ -373,8 +378,8 @@ public class CategoryListActivity extends AppCompatActivity {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, CategoryDetailActivity.class);
                         intent.putExtra(CategoryDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-
                         context.startActivity(intent);
+                        finish();
                     }
                 }
             });
