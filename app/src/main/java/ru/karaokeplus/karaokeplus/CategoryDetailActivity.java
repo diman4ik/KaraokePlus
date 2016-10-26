@@ -30,6 +30,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
+import ru.karaokeplus.karaokeplus.search.ExampleAdapter;
+import ru.karaokeplus.karaokeplus.search.SongSuggestion;
 import ru.karaokeplus.karaokeplus.content.dao.SongsDAO;
 import ru.karaokeplus.karaokeplus.content.data.CategoryContent;
 import ru.karaokeplus.karaokeplus.content.data.Song;
@@ -365,57 +367,6 @@ public class CategoryDetailActivity extends AppCompatActivity {
 
             _mainMenuList.setItemChecked(position, true);
             _drawerLayout.closeDrawer(_leftDrawer);
-        }
-    }
-
-    class SongSuggestion {
-        public String author;
-        public String songname;
-        public Song song;
-
-        public SongSuggestion(String author, String song) {
-            this.author = author;
-            this.songname = song;
-        }
-
-        public SongSuggestion(Song song) {
-            this.songname = song.getSongName();
-            this.author = song.getSongAuthor();
-            this.song = song;
-        }
-    }
-
-    class ExampleAdapter extends CursorAdapter {
-
-        private List<SongSuggestion> items;
-
-        private TextView textAuthor;
-        private TextView textSong;
-
-
-        public ExampleAdapter(Context context, Cursor cursor, List<SongSuggestion> items) {
-            super(context, cursor, false);
-            this.items = items;
-        }
-
-        @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            int index = cursor.getInt(0);
-            textAuthor.setText(items.get(index).author);
-            textSong.setText(items.get(index).songname);
-        }
-
-        @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-
-            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-            View view = inflater.inflate(R.layout.search_item, parent, false);
-
-            textAuthor = (TextView) view.findViewById(R.id.item_author);
-            textSong = (TextView) view.findViewById(R.id.item_song);
-
-            return view;
         }
     }
 }

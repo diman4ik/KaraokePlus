@@ -1,12 +1,19 @@
 package ru.karaokeplus.karaokeplus;
 
+import android.annotation.TargetApi;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.MatrixCursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,6 +37,8 @@ import java.util.List;
 import ru.karaokeplus.karaokeplus.content.dao.SongsDAO;
 import ru.karaokeplus.karaokeplus.content.data.CategoryContent;
 import ru.karaokeplus.karaokeplus.content.data.Song;
+import ru.karaokeplus.karaokeplus.search.ExampleAdapter;
+import ru.karaokeplus.karaokeplus.search.SongSuggestion;
 
 
 /**
@@ -52,6 +61,14 @@ public class CategoryListActivity extends AppCompatActivity {
 
     private int _clickCounter;
     private long _clickTime;
+
+    private SearchView _searchView;
+    private MenuItem _searchItem;
+
+    CategoryDetailFragment _fragment;
+
+    CategoryContent.CategoryItem _selectedCategory  = CategoryContent.ITEM_MAP.get(R.string.category_all);
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,17 +136,154 @@ public class CategoryListActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
+        _searchItem = menu.findItem(R.id.action_search);
+
+        MenuItemCompat.setOnActionExpandListener(_searchItem, new MenuItemCompat.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem menuItem) {
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem menuItem) {
+                _fragment.setCategory(_selectedCategory);
+                return true;
+            }
+        });
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+
+        _searchView =
+                (SearchView) menu.findItem(R.id.action_search).getActionView();
+        _searchView.setSearchableInfo(
+                searchManager.getSearchableInfo(getComponentName()));
+
+        _searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                loadSearchResult(newText);
+                return false;
+            }
+        });
+
         return super.onCreateOptionsMenu(menu);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            default:
-                break;
-        }
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    private void loadSearchResult(String query) {
 
-        return true;
+        query = query.toLowerCase();
+
+        if(query.length() == 0)
+            return;
+
+        List<Song> items = Utils.filterByCategory(_songs, _selectedCategory);
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            final List<SongSuggestion> suggestions = new ArrayList<SongSuggestion>();
+            String [] columns =  new String [] { "_id"};
+            Object[] temp = new Object[] { 0 };
+
+            for(Song item : items) {
+                suggestions.add(new SongSuggestion(item));
+            }
+
+            MatrixCursor cursor = new MatrixCursor(columns);
+
+            int counter = items.size();
+            String author = "";
+
+            // Добавить сооответствующих исполнителей
+            for(int i = 0; i < items.size(); i++) {
+                if(author.equals(items.get(i).getSongAuthor().toLowerCase()))
+                    continue;
+
+                author = items.get(i).getSongAuthor().toLowerCase();
+
+                if(query.length() > 2) {
+                    if (author.contains(query)) {
+                        temp[0] = counter++;
+                        cursor.addRow(temp);
+                        suggestions.add(new SongSuggestion(items.get(i).getSongAuthor(), ""));
+                    }
+                }
+                else {
+                    if (author.startsWith(query)) {
+                        temp[0] = counter++;
+                        cursor.addRow(temp);
+                        suggestions.add(new SongSuggestion(items.get(i).getSongAuthor(), ""));
+                    }
+                }
+            }
+
+
+            // Добавить песни исполнителей
+            for(int i = 0; i < items.size(); i++) {
+
+                author = items.get(i).getSongAuthor().toLowerCase();
+                String songname = items.get(i).getSongName().toLowerCase();
+
+                if(author.startsWith(query) && songname.length() > 0) {
+                    temp[0] = i;
+                    cursor.addRow(temp);
+                }
+                else if(query.length() > 2 && author.contains(query) && songname.length() > 0) {
+                    temp[0] = i;
+                    cursor.addRow(temp);
+                }
+                else {
+                    if( query.length() > 2 && songname.contains(query)) {
+                        temp[0] = i;
+                        cursor.addRow(temp);
+                    }
+                }
+            }
+
+            // SearchView
+            _searchView.setSuggestionsAdapter(new ExampleAdapter(this, cursor, suggestions));
+            _searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
+                @Override
+                public boolean onSuggestionSelect(int position) {
+                    return true;
+                }
+
+                @Override
+                public boolean onSuggestionClick(int position) {
+
+                    Cursor searchCursor = _searchView.getSuggestionsAdapter().getCursor();
+                    if(searchCursor.moveToPosition(position)) {
+                        int index = searchCursor.getInt(0);
+                        setListBasedOnSuggestion(suggestions, suggestions.get(index));
+                        _searchView.setIconified(true);
+                    }
+
+                    //MenuItemCompat.collapseActionView(_searchItem);
+                    return true;
+                }
+            });
+        }
+    }
+
+    private void setListBasedOnSuggestion(List<SongSuggestion> suggestions, SongSuggestion suggestion) {
+        if(suggestion.author.length() > 0 && suggestion.songname.length() > 0) {
+            List<Song> songs = new ArrayList<Song>();
+            songs.add(suggestion.song);
+            _fragment.setSongs(songs);
+        }
+        else if(suggestion.author.length() > 0) {
+            List<Song> songs = new ArrayList<Song>();
+            for(SongSuggestion song : suggestions) {
+                if(song.author.equals(suggestion.author) && song.song != null)
+                    songs.add(song.song);
+            }
+            _fragment.setSongs(songs);
+        }
     }
 
     private void reloadSongs() {
@@ -152,34 +306,28 @@ public class CategoryListActivity extends AppCompatActivity {
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(CategoryContent.ITEMS));
     }
 
-    public  void selectItem(int position) {
+    public void selectItem(int position) {
         CategoryContent.CategoryItem item = CategoryContent.ITEMS.get(position);
+        _selectedCategory = item;
         if (_twoPane) {
-            Bundle arguments = new Bundle();
-            arguments.putInt(CategoryDetailFragment.ARG_ITEM_ID, item.id);
-            CategoryDetailFragment fragment = new CategoryDetailFragment();
-            fragment.setArguments(arguments);
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.item_detail_container, fragment)
-                    .commit();
+
+            if(_fragment == null) {
+                Bundle arguments = new Bundle();
+                arguments.putInt(CategoryDetailFragment.ARG_ITEM_ID, item.id);
+                _fragment = new CategoryDetailFragment();
+                _fragment.setArguments(arguments);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.item_detail_container, _fragment)
+                        .commit();
+            }
+            else {
+                _fragment.setCategory(item);
+            }
         } else {
             Intent intent = new Intent(this, CategoryDetailActivity.class);
             intent.putExtra(CategoryDetailFragment.ARG_ITEM_ID, item.id);
             startActivity(intent);
         }
-    }
-
-    private List<Song> getSongs(CategoryContent.CategoryItem category) {
-        List<Song> ret = new ArrayList<>();
-
-        for(Song song : ((List<Song>)_songs)) {
-
-            if(song.getCategories().contains(category)) {
-                ret.add(song);
-            }
-        }
-
-        return ret;
     }
 
     public class SimpleItemRecyclerViewAdapter
@@ -201,20 +349,26 @@ public class CategoryListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mItem = mValues.get(position);
-            //holder.mIdView.setText(mValues.get(position).id);
-            holder.mContentView.setText(mValues.get(position).categoryName);
+            holder.mContentView.setText(_selectedCategory.categoryName);
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    _selectedCategory = holder.mItem;
                     if (_twoPane) {
-                        Bundle arguments = new Bundle();
-                        arguments.putInt(CategoryDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-                        CategoryDetailFragment fragment = new CategoryDetailFragment();
-                        fragment.setArguments(arguments);
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.item_detail_container, fragment)
-                                .commit();
+
+                        if(_fragment == null) {
+                            Bundle arguments = new Bundle();
+                            arguments.putInt(CategoryDetailFragment.ARG_ITEM_ID, holder.mItem.id);
+                            _fragment = new CategoryDetailFragment();
+                            _fragment.setArguments(arguments);
+                            getSupportFragmentManager().beginTransaction()
+                                    .replace(R.id.item_detail_container, _fragment)
+                                    .commit();
+                        }
+                        else {
+                            _fragment.setCategory(_selectedCategory);
+                        }
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, CategoryDetailActivity.class);
