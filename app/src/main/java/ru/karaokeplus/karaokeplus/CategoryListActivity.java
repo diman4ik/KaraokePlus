@@ -354,7 +354,7 @@ public class CategoryListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mItem = mValues.get(position);
-            holder.mContentView.setText(_selectedCategory.categoryName);
+            holder.mContentView.setText(holder.mItem.categoryName);
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
